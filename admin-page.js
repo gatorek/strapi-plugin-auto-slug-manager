@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useIntl } from 'react-intl';
 
 const SettingsPage = () => {
+  const { formatMessage } = useIntl();
   const [settings, setSettings] = useState({
     enabled: true,
     sourceField: 'title',
@@ -19,6 +21,7 @@ const SettingsPage = () => {
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState(null); // 'success' or 'error'
 
   // Загружаем настройки при монтировании
   useEffect(() => {
@@ -58,10 +61,15 @@ const SettingsPage = () => {
       });
       
       const result = await response.json();
-      setMessage('Settings saved successfully!');
-      setTimeout(() => setMessage(''), 3000);
+      setMessage(formatMessage({ id: 'auto-slug-manager.message.success', defaultMessage: 'Settings saved successfully!' }));
+      setMessageType('success');
+      setTimeout(() => {
+        setMessage('');
+        setMessageType(null);
+      }, 3000);
     } catch (error) {
-      setMessage('Error saving settings');
+      setMessage(formatMessage({ id: 'auto-slug-manager.message.error', defaultMessage: 'Error saving settings' }));
+      setMessageType('error');
       console.error('Error saving:', error);
     }
     setLoading(false);
@@ -103,25 +111,25 @@ const SettingsPage = () => {
           fontSize: '2.5rem',
           fontWeight: '700'
         }
-      }, '🔗 Auto Slug Manager'),
+      }, '🔗 ' + formatMessage({ id: 'auto-slug-manager.plugin.name', defaultMessage: 'Auto Slug Manager' })),
       React.createElement('p', {
         style: {
           color: '#64748b',
           fontSize: '1.1rem',
           margin: 0
         }
-      }, 'Universal slug generator for all content-types')
+      }, formatMessage({ id: 'auto-slug-manager.plugin.description', defaultMessage: 'Universal slug generator for all content-types' }))
     ),
 
     // Сообщение об успехе
     message && React.createElement('div', {
       style: {
-        backgroundColor: message.includes('Error') ? '#fef2f2' : '#f0f9ff',
-        border: `2px solid ${message.includes('Error') ? '#f87171' : '#60a5fa'}`,
+        backgroundColor: messageType === 'error' ? '#fef2f2' : '#f0f9ff',
+        border: `2px solid ${messageType === 'error' ? '#f87171' : '#60a5fa'}`,
         borderRadius: '10px',
         padding: '1rem 1.5rem',
         marginBottom: '1.5rem',
-        color: message.includes('Error') ? '#dc2626' : '#1d4ed8',
+        color: messageType === 'error' ? '#dc2626' : '#1d4ed8',
         fontWeight: '600',
         boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
       }
@@ -145,7 +153,7 @@ const SettingsPage = () => {
           fontSize: '1.3rem',
           fontWeight: '700'
         }
-      }, '✅ Plugin Status'),
+      }, '✅ ' + formatMessage({ id: 'auto-slug-manager.status.title', defaultMessage: 'Plugin Status' })),
       React.createElement('div', {
         style: { 
           marginBottom: '0.5rem',
@@ -153,14 +161,14 @@ const SettingsPage = () => {
           color: '#374151',
           fontWeight: '500'
         }
-      }, `Found content-types: ${status.contentTypesCount}`),
+      }, formatMessage({ id: 'auto-slug-manager.status.contentTypesCount', defaultMessage: 'Found content-types: {count}' }, { count: status.contentTypesCount })),
       React.createElement('div', {
         style: { 
           fontSize: '0.875rem', 
           color: '#6b7280',
           fontStyle: 'italic'
         }
-      }, `Last update: ${new Date(status.lastUpdate).toLocaleString()}`)
+      }, formatMessage({ id: 'auto-slug-manager.status.lastUpdate', defaultMessage: 'Last update: {date}' }, { date: new Date(status.lastUpdate).toLocaleString() }))
     ),
 
     // Основные настройки
@@ -181,17 +189,19 @@ const SettingsPage = () => {
           fontSize: '1.3rem',
           fontWeight: '700'
         }
-      }, '⚙️ Settings'),
+      }, '⚙️ ' + formatMessage({ id: 'auto-slug-manager.settings.title', defaultMessage: 'Settings' })),
 
       // Переключатели
       ...[
-        { key: 'enabled', label: 'Enable plugin', desc: 'Global enable/disable' },
-        { key: 'updateExistingSlugs', label: 'Update existing slugs', desc: 'Regenerate when title changes' },
-        { key: 'handleRichText', label: 'Rich Text support', desc: 'Extract text from Rich Text Blocks and classic Rich Text' },
-        { key: 'supportCyrillic', label: 'Cyrillic support', desc: 'Transliteration of Russian characters' },
-        { key: 'addSuffixForUnique', label: 'Suffixes for uniqueness', desc: 'Add -1, -2, -3 for unique slugs' }
-      ].map(item => 
-        React.createElement('div', {
+        { key: 'enabled', labelId: 'auto-slug-manager.settings.enabled', descId: 'auto-slug-manager.settings.enabled.description' },
+        { key: 'updateExistingSlugs', labelId: 'auto-slug-manager.settings.updateExistingSlugs', descId: 'auto-slug-manager.settings.updateExistingSlugs.description' },
+        { key: 'handleRichText', labelId: 'auto-slug-manager.settings.handleRichText', descId: 'auto-slug-manager.settings.handleRichText.description' },
+        { key: 'supportCyrillic', labelId: 'auto-slug-manager.settings.supportCyrillic', descId: 'auto-slug-manager.settings.supportCyrillic.description' },
+        { key: 'addSuffixForUnique', labelId: 'auto-slug-manager.settings.addSuffixForUnique', descId: 'auto-slug-manager.settings.addSuffixForUnique.description' }
+      ].map(item => {
+        const label = formatMessage({ id: item.labelId, defaultMessage: item.labelId });
+        const desc = formatMessage({ id: item.descId, defaultMessage: item.descId });
+        return React.createElement('div', {
           key: item.key,
           style: {
             display: 'flex',
@@ -209,14 +219,14 @@ const SettingsPage = () => {
                 color: '#1f2937',
                 fontSize: '0.95rem'
               }
-            }, item.label),
+            }, label),
             React.createElement('div', {
               style: { 
                 fontSize: '0.8rem', 
                 color: '#6b7280',
                 lineHeight: '1.4'
               }
-            }, item.desc)
+            }, desc)
           ),
           React.createElement('label', {
             style: {
@@ -260,8 +270,8 @@ const SettingsPage = () => {
               }
             })
           )
-        )
-      )
+        );
+      })
     ),
 
     // Настройки полей
@@ -282,7 +292,7 @@ const SettingsPage = () => {
           fontSize: '1.3rem',
           fontWeight: '700'
         }
-      }, '📝 Source Fields'),
+      }, '📝 ' + formatMessage({ id: 'auto-slug-manager.fields.title', defaultMessage: 'Source Fields' })),
       
       // Основное поле
       React.createElement('div', {
@@ -296,7 +306,7 @@ const SettingsPage = () => {
             color: '#374151',
             marginBottom: '0.5rem'
           }
-        }, 'Main field for slug generation'),
+        }, formatMessage({ id: 'auto-slug-manager.fields.mainField', defaultMessage: 'Main field for slug generation' })),
         React.createElement('select', {
           value: settings.sourceField,
           onChange: (e) => setSettings(prev => ({ ...prev, sourceField: e.target.value })),
@@ -324,7 +334,7 @@ const SettingsPage = () => {
             marginTop: '0.5rem',
             lineHeight: '1.4'
           }
-        }, 'Field from which the slug will be generated first')
+        }, formatMessage({ id: 'auto-slug-manager.fields.mainField.description', defaultMessage: 'Field from which the slug will be generated first' }))
       ),
       
       // Резервное поле  
@@ -337,7 +347,7 @@ const SettingsPage = () => {
             color: '#374151',
             marginBottom: '0.5rem'
           }
-        }, 'Fallback field'),
+        }, formatMessage({ id: 'auto-slug-manager.fields.fallbackField', defaultMessage: 'Fallback field' })),
         React.createElement('select', {
           value: settings.fallbackField,
           onChange: (e) => setSettings(prev => ({ ...prev, fallbackField: e.target.value })),
@@ -357,7 +367,7 @@ const SettingsPage = () => {
           React.createElement('option', { value: 'label' }, 'label'),
           React.createElement('option', { value: 'heading' }, 'heading'),
           React.createElement('option', { value: 'caption' }, 'caption'),
-          React.createElement('option', { value: '' }, 'Do not use')
+          React.createElement('option', { value: '' }, formatMessage({ id: 'auto-slug-manager.fields.doNotUse', defaultMessage: 'Do not use' }))
         ),
         React.createElement('p', {
           style: {
@@ -366,7 +376,7 @@ const SettingsPage = () => {
             marginTop: '0.5rem',
             lineHeight: '1.4'
           }
-        }, 'Used if the main field is empty or missing')
+        }, formatMessage({ id: 'auto-slug-manager.fields.fallbackField.description', defaultMessage: 'Used if the main field is empty or missing' }))
       )
     ),
 
@@ -388,7 +398,7 @@ const SettingsPage = () => {
           fontSize: '1.3rem',
           fontWeight: '700'
         }
-      }, '🔧 Slug Generation Settings'),
+      }, '🔧 ' + formatMessage({ id: 'auto-slug-manager.slugify.title', defaultMessage: 'Slug Generation Settings' })),
       
       // Локаль
       React.createElement('div', {
@@ -402,7 +412,7 @@ const SettingsPage = () => {
             color: '#374151',
             marginBottom: '0.5rem'
           }
-        }, 'Locale for transliteration'),
+        }, formatMessage({ id: 'auto-slug-manager.slugify.locale', defaultMessage: 'Locale for transliteration' })),
         React.createElement('select', {
           value: settings.slugifyOptions?.locale || 'ru',
           onChange: (e) => setSettings(prev => ({ 
@@ -439,7 +449,7 @@ const SettingsPage = () => {
             marginTop: '0.5rem',
             lineHeight: '1.4'
           }
-        }, 'Locale affects character transliteration. For example: "ё" → "e" (ru) or "yo" (en)')
+        }, formatMessage({ id: 'auto-slug-manager.slugify.locale.description', defaultMessage: 'Locale affects character transliteration. For example: "ё" → "e" (ru) or "yo" (en)' }))
       )
     ),
 
@@ -478,7 +488,7 @@ const SettingsPage = () => {
             e.target.style.transform = 'translateY(0)';
           }
         }
-      }, loading ? 'Saving...' : 'Save Settings')
+      }, loading ? formatMessage({ id: 'auto-slug-manager.button.saving', defaultMessage: 'Saving...' }) : formatMessage({ id: 'auto-slug-manager.button.save', defaultMessage: 'Save Settings' }))
     )
   );
 };
